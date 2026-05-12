@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Каталог навчальних ресурсів</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">◈</span>
+        <span>Каталог навчальних ресурсів</span>
+      </div>
+      <div class="header-stats" id="headerStats">
+        <span id="totalCount">0 ресурсів</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- FORM PANEL -->
+    <aside class="form-panel">
+      <h2 class="panel-title">Додати ресурс</h2>
+
+      <form id="resourceForm" novalidate>
+
+        <div class="field-group">
+          <label for="title">Назва ресурсу <span class="required">*</span></label>
+          <input type="text" id="title" name="title" placeholder="Наприклад: CS50 by Harvard" autocomplete="off" />
+          <span class="field-error" id="titleError"></span>
+        </div>
+
+        <div class="field-group">
+          <label for="url">Посилання (URL) <span class="required">*</span></label>
+          <input type="url" id="url" name="url" placeholder="https://example.com" autocomplete="off" />
+          <span class="field-error" id="urlError"></span>
+        </div>
+
+        <div class="field-group">
+          <label for="category">Категорія <span class="required">*</span></label>
+          <select id="category" name="category">
+            <option value="">— оберіть категорію —</option>
+            <option value="Програмування">Програмування</option>
+            <option value="Математика">Математика</option>
+            <option value="Дизайн">Дизайн</option>
+            <option value="Мови">Мови</option>
+            <option value="Наука">Наука</option>
+            <option value="Бізнес">Бізнес</option>
+            <option value="Інше">Інше</option>
+          </select>
+          <span class="field-error" id="categoryError"></span>
+        </div>
+
+        <div class="field-group">
+          <label for="rating">Рейтинг <span class="required">*</span></label>
+          <div class="star-picker" id="starPicker" role="radiogroup" aria-label="Оберіть рейтинг">
+            <button type="button" class="star" data-value="1" aria-label="1 зірка">★</button>
+            <button type="button" class="star" data-value="2" aria-label="2 зірки">★</button>
+            <button type="button" class="star" data-value="3" aria-label="3 зірки">★</button>
+            <button type="button" class="star" data-value="4" aria-label="4 зірки">★</button>
+            <button type="button" class="star" data-value="5" aria-label="5 зірок">★</button>
+          </div>
+          <input type="hidden" id="rating" name="rating" value="" />
+          <span class="field-error" id="ratingError"></span>
+        </div>
+
+        <div class="field-group">
+          <label for="comment">Коментар</label>
+          <textarea id="comment" name="comment" rows="3" placeholder="Ваші враження від ресурсу..."></textarea>
+          <span class="field-error" id="commentError"></span>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="submitBtn" class="btn-primary">
+            <span class="btn-icon">+</span> Додати ресурс
+          </button>
+          <button type="button" id="resetBtn" class="btn-ghost">Скинути</button>
+        </div>
+
+        <div class="form-success" id="formSuccess" hidden>
+          ✓ Ресурс успішно додано!
+        </div>
+      </form>
+    </aside>
+
+    <!-- TABLE PANEL -->
+    <section class="table-panel">
+      <div class="table-header">
+        <h2 class="panel-title">Список ресурсів</h2>
+        <div class="table-controls">
+          <input type="text" id="searchInput" placeholder="Пошук..." class="search-input" />
+          <select id="filterCategory" class="filter-select">
+            <option value="">Всі категорії</option>
+            <option value="Програмування">Програмування</option>
+            <option value="Математика">Математика</option>
+            <option value="Дизайн">Дизайн</option>
+            <option value="Мови">Мови</option>
+            <option value="Наука">Наука</option>
+            <option value="Бізнес">Бізнес</option>
+            <option value="Інше">Інше</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="resourceTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Назва</th>
+              <th>URL</th>
+              <th>Категорія</th>
+              <th>Рейтинг</th>
+              <th>Коментар</th>
+              <th>Дія</th>
+            </tr>
+          </thead>
+          <tbody id="resourceBody">
+            <tr class="empty-row" id="emptyRow">
+              <td colspan="7">
+                <div class="empty-state">
+                  <span class="empty-icon">◈</span>
+                  <p>Додайте перший ресурс</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
