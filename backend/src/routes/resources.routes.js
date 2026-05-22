@@ -1,0 +1,11 @@
+const express = require("express");
+const repo = require("../repositories/resourcesRepo");
+const router = express.Router();
+const CATS = ["programming","math","design","languages","science","business","other"];
+router.get("/stats", async (req,res,next) => { try { res.json({data: await repo.getAvgRatingByCategory()}); } catch(e){next(e);} });
+router.get("/", async (req,res,next) => { try { const r=await repo.getAllResources(req.query); res.json({data:r,meta:{count:r.length}}); } catch(e){next(e);} });
+router.get("/:id", async (req,res,next) => { try { const id=Number(req.params.id); if(!Number.isFinite(id)) return res.status(400).json({error:"id must be a number"}); const r=await repo.getResourceById(id); if(!r) return res.status(404).json({error:"Resource not found"}); res.json({data:r}); } catch(e){next(e);} });
+router.post("/", async (req,res,next) => { try { const {title,url,category,description,authorId}=req.body; if(!title||!url||!category||!description||!authorId) return res.status(400).json({error:"title, url, category, description, authorId are required"}); if(!CATS.includes(category)) return res.status(400).json({error:"invalid category"}); const c=await repo.createResource(title,url,category,description,authorId); res.status(201).json({data:c}); } catch(e){next(e);} });
+router.put("/:id", async (req,res,next) => { try { const id=Number(req.params.id); if(!Number.isFinite(id)) return res.status(400).json({error:"id must be a number"}); if(req.body.category&&!CATS.includes(req.body.category)) return res.status(400).json({error:"invalid category"}); const r=await repo.updateResource(id,req.body); if(!r) return res.status(404).json({error:"Resource not found"}); res.json({data:r}); } catch(e){next(e);} });
+router.delete("/:id", async (req,res,next) => { try { const id=Number(req.params.id); if(!Number.isFinite(id)) return res.status(400).json({error:"id must be a number"}); const ok=await repo.deleteResource(id); if(!ok) return res.status(404).json({error:"Resource not found"}); res.status(204).send(); } catch(e){next(e);} });
+module.exports = router;

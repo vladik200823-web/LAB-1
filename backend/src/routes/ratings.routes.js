@@ -1,0 +1,9 @@
+const express = require("express");
+const repo = require("../repositories/ratingsRepo");
+const router = express.Router();
+router.get("/", async (req,res,next) => { try { const r=await repo.getAllRatings(req.query); res.json({data:r,meta:{count:r.length}}); } catch(e){next(e);} });
+router.get("/:id", async (req,res,next) => { try { const id=Number(req.params.id); if(!Number.isFinite(id)) return res.status(400).json({error:"id must be a number"}); const r=await repo.getRatingById(id); if(!r) return res.status(404).json({error:"Rating not found"}); res.json({data:r}); } catch(e){next(e);} });
+router.post("/", async (req,res,next) => { try { const {resourceId,userId,value}=req.body; if(!resourceId||!userId||!value) return res.status(400).json({error:"resourceId, userId, value are required"}); if(!Number.isInteger(value)||value<1||value>5) return res.status(400).json({error:"value must be 1-5"}); const c=await repo.createRating(resourceId,userId,value); res.status(201).json({data:c}); } catch(e){next(e);} });
+router.put("/:id", async (req,res,next) => { try { const id=Number(req.params.id); if(!Number.isFinite(id)) return res.status(400).json({error:"id must be a number"}); const {value}=req.body; if(!value||!Number.isInteger(value)||value<1||value>5) return res.status(400).json({error:"value must be 1-5"}); const r=await repo.updateRating(id,value); if(!r) return res.status(404).json({error:"Rating not found"}); res.json({data:r}); } catch(e){next(e);} });
+router.delete("/:id", async (req,res,next) => { try { const id=Number(req.params.id); if(!Number.isFinite(id)) return res.status(400).json({error:"id must be a number"}); const ok=await repo.deleteRating(id); if(!ok) return res.status(404).json({error:"Rating not found"}); res.status(204).send(); } catch(e){next(e);} });
+module.exports = router;

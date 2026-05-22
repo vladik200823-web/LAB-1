@@ -1,0 +1,16 @@
+const express = require("express");
+const { errorHandler } = require("./middlewares/errorHandler");
+const usersRoutes = require("./routes/users.routes");
+const resourcesRoutes = require("./routes/resources.routes");
+const ratingsRoutes = require("./routes/ratings.routes");
+const commentsRoutes = require("./routes/comments.routes");
+const app = express();
+app.use(express.json());
+app.get("/health", (req,res) => res.json({status:"ok"}));
+app.use("/api/users", usersRoutes);
+app.use("/api/resources", resourcesRoutes);
+app.use("/api/ratings", ratingsRoutes);
+app.use("/api/comments", commentsRoutes);
+app.use((req,res) => res.status(404).json({error:`Route ${req.method} ${req.url} not found`}));
+app.use(errorHandler);
+module.exports = { app };

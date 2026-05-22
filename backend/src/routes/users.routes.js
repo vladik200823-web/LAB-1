@@ -1,0 +1,10 @@
+const express = require("express");
+const repo = require("../repositories/usersRepo");
+const router = express.Router();
+const ROLES = ["admin","user","moderator"];
+router.get("/", async (req,res,next) => { try { const users=await repo.getAllUsers(req.query); res.json({data:users,meta:{count:users.length}}); } catch(e){next(e);} });
+router.get("/:id", async (req,res,next) => { try { const id=Number(req.params.id); if(!Number.isFinite(id)) return res.status(400).json({error:"id must be a number"}); const u=await repo.getUserById(id); if(!u) return res.status(404).json({error:"User not found"}); res.json({data:u}); } catch(e){next(e);} });
+router.post("/", async (req,res,next) => { try { const {name,email,role}=req.body; if(!name||!email||!role) return res.status(400).json({error:"name, email, role are required"}); if(!ROLES.includes(role)) return res.status(400).json({error:"role must be: admin, user, moderator"}); const c=await repo.createUser(name,email,role); res.status(201).json({data:c}); } catch(e){next(e);} });
+router.put("/:id", async (req,res,next) => { try { const id=Number(req.params.id); if(!Number.isFinite(id)) return res.status(400).json({error:"id must be a number"}); if(req.body.role&&!ROLES.includes(req.body.role)) return res.status(400).json({error:"invalid role"}); const u=await repo.updateUser(id,req.body); if(!u) return res.status(404).json({error:"User not found"}); res.json({data:u}); } catch(e){next(e);} });
+router.delete("/:id", async (req,res,next) => { try { const id=Number(req.params.id); if(!Number.isFinite(id)) return res.status(400).json({error:"id must be a number"}); const ok=await repo.deleteUser(id); if(!ok) return res.status(404).json({error:"User not found"}); res.status(204).send(); } catch(e){next(e);} });
+module.exports = router;
