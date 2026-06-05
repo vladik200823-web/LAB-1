@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Каталог навчальних ресурсів</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>📚 Каталог навчальних ресурсів</h1>
+    <p class="subtitle">Варіант 5 — Лабораторна робота №4</p>
+  </header>
+
+  <div id="notice" class="notice" style="display:none"></div>
+
+  <main class="layout">
+    <!-- ── FORM ── -->
+    <aside class="sidebar">
+      <h2>Додати ресурс</h2>
+      <form id="resourceForm" novalidate>
+
+        <div class="field">
+          <label for="f-title">Назва *</label>
+          <input id="f-title" type="text" placeholder="Наприклад: CS50" />
+          <span class="field-error" id="err-title"></span>
+        </div>
+
+        <div class="field">
+          <label for="f-url">URL *</label>
+          <input id="f-url" type="url" placeholder="https://..." />
+          <span class="field-error" id="err-url"></span>
+        </div>
+
+        <div class="field">
+          <label for="f-category">Категорія *</label>
+          <select id="f-category">
+            <option value="">— Оберіть —</option>
+            <option value="programming">Programming</option>
+            <option value="math">Math</option>
+            <option value="design">Design</option>
+            <option value="languages">Languages</option>
+            <option value="science">Science</option>
+            <option value="business">Business</option>
+            <option value="other">Other</option>
+          </select>
+          <span class="field-error" id="err-category"></span>
+        </div>
+
+        <div class="field">
+          <label for="f-description">Опис *</label>
+          <textarea id="f-description" rows="3" placeholder="Короткий опис ресурсу"></textarea>
+          <span class="field-error" id="err-description"></span>
+        </div>
+
+        <div class="field">
+          <label for="f-authorId">Автор *</label>
+          <select id="f-authorId">
+            <option value="">— Завантаження... —</option>
+          </select>
+          <span class="field-error" id="err-authorId"></span>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary">➕ Додати ресурс</button>
+      </form>
+    </aside>
+
+    <!-- ── LIST ── -->
+    <section class="content">
+      <div class="list-header">
+        <h2>Список ресурсів</h2>
+        <div class="filter-row">
+          <label for="filterCategory">Фільтр:</label>
+          <select id="filterCategory">
+            <option value="">Всі категорії</option>
+            <option value="programming">Programming</option>
+            <option value="math">Math</option>
+            <option value="design">Design</option>
+            <option value="languages">Languages</option>
+            <option value="science">Science</option>
+            <option value="business">Business</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="listStatus"></div>
+      <div id="listContainer"></div>
+      <div id="detailPanel" class="detail-panel" style="display:none"></div>
+    </section>
+  </main>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
