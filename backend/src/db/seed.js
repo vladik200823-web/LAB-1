@@ -13,6 +13,9 @@ async function seed() {
   await run(`INSERT OR IGNORE INTO Ratings (resourceId,userId,value,createdAt) VALUES (2,1,4,"${now}");`);
   await run(`INSERT OR IGNORE INTO Comments (resourceId,userId,text,createdAt) VALUES (1,2,"Great course!","${now}");`);
   await run(`INSERT OR IGNORE INTO Comments (resourceId,userId,text,createdAt) VALUES (2,1,"Excellent curriculum.","${now}");`);
+  await run(`INSERT OR IGNORE INTO Notes (ownerUserId,title,content,createdAt) VALUES (1,"Нотатка Olena","Секретна нотатка користувача Olena","${now}");`);
+  await run(`INSERT OR IGNORE INTO Notes (ownerUserId,title,content,createdAt) VALUES (2,"Нотатка Mykhailo","Приватний запис Mykhailo","${now}");`);
+  await run(`INSERT OR IGNORE INTO Notes (ownerUserId,title,content,createdAt) VALUES (1,"Ще одна нотатка Olena","Другий секретний запис","${now}");`);
   console.log("Seed completed");
   process.exit(0);
 }
