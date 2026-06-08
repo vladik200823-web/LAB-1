@@ -1,98 +1,49 @@
 export function showNotice(text, isError = false) {
   const el = document.getElementById("notice");
-  el.innerHTML = text;
+  el.textContent = text;
   el.className = "notice " + (isError ? "notice-error" : "notice-success");
   el.style.display = "block";
   setTimeout(() => { el.style.display = "none"; }, 4000);
 }
-
 export function renderListStatus(status, error) {
   const el = document.getElementById("listStatus");
-  if (status === "loading") el.innerHTML = `<div class="status-msg">вЏі Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ...</div>`;
-  else if (status === "empty") el.innerHTML = `<div class="status-msg">рџ“­ Р—Р°РїРёСЃС–РІ С‰Рµ РЅРµРјР°С”.</div>`;
-  else if (status === "error") el.innerHTML = `<div class="status-msg error">вќЊ РџРѕРјРёР»РєР°: ${error?.message || "РЅРµРІС–РґРѕРјР°"}</div>`;
-  else el.innerHTML = "";
+  el.innerHTML = "";
+  if (status === "loading") { el.textContent = "Завантаження..."; el.className = "status-msg"; }
+  else if (status === "empty") { el.textContent = "Записів ще немає."; el.className = "status-msg"; }
+  else if (status === "error") { el.textContent = `Помилка: ${error?.message || "невідома"}`; el.className = "status-msg error"; }
+  else { el.className = ""; }
 }
-
 export function renderResources(items, onDelete, onSelect) {
   const el = document.getElementById("listContainer");
   el.innerHTML = "";
-
   if (!items || items.length === 0) return;
-
   const table = document.createElement("table");
-  table.innerHTML = `
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>РќР°Р·РІР°</th>
-        <th>РљР°С‚РµРіРѕСЂС–СЏ</th>
-        <th>РђРІС‚РѕСЂ</th>
-        <th>URL</th>
-        <th>Р”С–С—</th>
-      </tr>
-    </thead>
-  `;
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  ["#","Назва","Категорія","Автор","URL","Дії"].forEach(text => { const th = document.createElement("th"); th.textContent = text; headerRow.appendChild(th); });
+  thead.appendChild(headerRow); table.appendChild(thead);
   const tbody = document.createElement("tbody");
-
   for (const item of items) {
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${item.id}</td>
-      <td><span class="resource-title" data-id="${item.id}">${item.title ?? "(Р±РµР· РЅР°Р·РІРё)"}</span></td>
-      <td><span class="badge">${item.category ?? "вЂ“"}</span></td>
-      <td>${item.authorName ?? item.authorId ?? "вЂ“"}</td>
-      <td><a href="${item.url}" target="_blank" rel="noopener">рџ”— РїРѕСЃРёР»Р°РЅРЅСЏ</a></td>
-      <td>
-        <button class="btn btn-sm btn-danger" data-delete="${item.id}">Р’РёРґР°Р»РёС‚Рё</button>
-      </td>
-    `;
-    tr.querySelector("[data-delete]").addEventListener("click", () => onDelete(item.id));
-    tr.querySelector(".resource-title").addEventListener("click", () => onSelect(item.id));
+    const tdId = document.createElement("td"); tdId.textContent = item.id; tr.appendChild(tdId);
+    const tdTitle = document.createElement("td"); const titleSpan = document.createElement("span"); titleSpan.className = "resource-title"; titleSpan.textContent = item.title ?? "(без назви)"; titleSpan.addEventListener("click", () => onSelect(item.id)); tdTitle.appendChild(titleSpan); tr.appendChild(tdTitle);
+    const tdCat = document.createElement("td"); const badge = document.createElement("span"); badge.className = "badge"; badge.textContent = item.category ?? "-"; tdCat.appendChild(badge); tr.appendChild(tdCat);
+    const tdAuthor = document.createElement("td"); tdAuthor.textContent = item.authorName ?? item.authorId ?? "-"; tr.appendChild(tdAuthor);
+    const tdUrl = document.createElement("td"); const link = document.createElement("a"); link.href = item.url; link.target = "_blank"; link.rel = "noopener"; link.textContent = "посилання"; tdUrl.appendChild(link); tr.appendChild(tdUrl);
+    const tdActions = document.createElement("td"); const deleteBtn = document.createElement("button"); deleteBtn.className = "btn btn-sm btn-danger"; deleteBtn.textContent = "Видалити"; deleteBtn.addEventListener("click", () => onDelete(item.id)); tdActions.appendChild(deleteBtn); tr.appendChild(tdActions);
     tbody.appendChild(tr);
   }
-
-  table.appendChild(tbody);
-  el.appendChild(table);
+  table.appendChild(tbody); el.appendChild(table);
 }
-
 export function renderDetail(resource) {
   const el = document.getElementById("detailPanel");
   if (!resource) { el.innerHTML = ""; el.style.display = "none"; return; }
-  el.style.display = "block";
-  el.innerHTML = `
-    <h3>рџ“„ Р”РµС‚Р°Р»С– СЂРµСЃСѓСЂСЃСѓ #${resource.id}</h3>
-    <p><b>РќР°Р·РІР°:</b> ${resource.title}</p>
-    <p><b>URL:</b> <a href="${resource.url}" target="_blank">${resource.url}</a></p>
-    <p><b>РљР°С‚РµРіРѕСЂС–СЏ:</b> ${resource.category}</p>
-    <p><b>РћРїРёСЃ:</b> ${resource.description}</p>
-    <p><b>РђРІС‚РѕСЂ:</b> ${resource.authorName ?? resource.authorId}</p>
-    <p><b>РЎС‚РІРѕСЂРµРЅРѕ:</b> ${new Date(resource.createdAt).toLocaleString("uk-UA")}</p>
-    <button class="btn btn-sm" id="closeDetail">вњ• Р—Р°РєСЂРёС‚Рё</button>
-  `;
-  el.querySelector("#closeDetail").addEventListener("click", () => {
-    el.innerHTML = ""; el.style.display = "none";
-  });
+  el.style.display = "block"; el.innerHTML = "";
+  const h3 = document.createElement("h3"); h3.textContent = `Деталі ресурсу #${resource.id}`; el.appendChild(h3);
+  [["Назва",resource.title],["Категорія",resource.category],["Опис",resource.description],["Автор",resource.authorName??resource.authorId],["Створено",new Date(resource.createdAt).toLocaleString("uk-UA")]].forEach(([label,value]) => { const p = document.createElement("p"); const b = document.createElement("b"); b.textContent = label+": "; p.appendChild(b); p.appendChild(document.createTextNode(value??"–")); el.appendChild(p); });
+  const pUrl = document.createElement("p"); const bUrl = document.createElement("b"); bUrl.textContent = "URL: "; const a = document.createElement("a"); a.href = resource.url; a.target = "_blank"; a.textContent = resource.url; pUrl.appendChild(bUrl); pUrl.appendChild(a); el.appendChild(pUrl);
+  const closeBtn = document.createElement("button"); closeBtn.className = "btn btn-sm"; closeBtn.textContent = "Закрити"; closeBtn.addEventListener("click", () => { el.innerHTML = ""; el.style.display = "none"; }); el.appendChild(closeBtn);
 }
-
-export function setFormEnabled(enabled) {
-  const btn = document.getElementById("submitBtn");
-  btn.disabled = !enabled;
-  btn.textContent = enabled ? "вћ• Р”РѕРґР°С‚Рё СЂРµСЃСѓСЂСЃ" : "вЏі Р—Р±РµСЂРµР¶РµРЅРЅСЏ...";
-}
-
-export function clearForm() {
-  document.getElementById("resourceForm").reset();
-  document.querySelectorAll(".field-error").forEach(el => el.textContent = "");
-  document.querySelectorAll("input, select, textarea").forEach(el => el.classList.remove("invalid"));
-}
-
-export function showFieldErrors(errors) {
-  if (!errors) return;
-  for (const [field, msg] of Object.entries(errors)) {
-    const errEl = document.getElementById(`err-${field}`);
-    const inputEl = document.getElementById(`f-${field}`);
-    if (errEl) errEl.textContent = Array.isArray(msg) ? msg[0] : msg;
-    if (inputEl) inputEl.classList.add("invalid");
-  }
-}
+export function setFormEnabled(enabled) { const btn = document.getElementById("submitBtn"); btn.disabled = !enabled; btn.textContent = enabled ? "+ Додати ресурс" : "Збереження..."; }
+export function clearForm() { document.getElementById("resourceForm").reset(); document.querySelectorAll(".field-error").forEach(el => el.textContent = ""); document.querySelectorAll("input, select, textarea").forEach(el => el.classList.remove("invalid")); }
+export function showFieldErrors(errors) { if (!errors) return; for (const [field, msg] of Object.entries(errors)) { const errEl = document.getElementById(`err-${field}`); const inputEl = document.getElementById(`f-${field}`); if (errEl) errEl.textContent = Array.isArray(msg) ? msg[0] : msg; if (inputEl) inputEl.classList.add("invalid"); } }
