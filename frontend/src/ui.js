@@ -1,4 +1,4 @@
-export function showNotice(text, isError = false) {
+п»їexport function showNotice(text, isError = false) {
   const el = document.getElementById("notice");
   el.textContent = text;
   el.className = "notice " + (isError ? "notice-error" : "notice-success");
@@ -8,9 +8,9 @@ export function showNotice(text, isError = false) {
 export function renderListStatus(status, error) {
   const el = document.getElementById("listStatus");
   el.innerHTML = "";
-  if (status === "loading") { el.textContent = "Завантаження..."; el.className = "status-msg"; }
-  else if (status === "empty") { el.textContent = "Записів ще немає."; el.className = "status-msg"; }
-  else if (status === "error") { el.textContent = `Помилка: ${error?.message || "невідома"}`; el.className = "status-msg error"; }
+  if (status === "loading") { el.textContent = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ..."; el.className = "status-msg"; }
+  else if (status === "empty") { el.textContent = "пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ."; el.className = "status-msg"; }
+  else if (status === "error") { el.textContent = `пїЅпїЅпїЅпїЅпїЅпїЅпїЅ: ${error?.message || "пїЅпїЅпїЅпїЅпїЅпїЅпїЅ"}`; el.className = "status-msg error"; }
   else { el.className = ""; }
 }
 export function renderResources(items, onDelete, onSelect) {
@@ -20,17 +20,17 @@ export function renderResources(items, onDelete, onSelect) {
   const table = document.createElement("table");
   const thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
-  ["#","Назва","Категорія","Автор","URL","Дії"].forEach(text => { const th = document.createElement("th"); th.textContent = text; headerRow.appendChild(th); });
+  ["#","пїЅпїЅпїЅпїЅпїЅ","пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ","пїЅпїЅпїЅпїЅпїЅ","URL","ДіпїЅ"].forEach(text => { const th = document.createElement("th"); th.textContent = text; headerRow.appendChild(th); });
   thead.appendChild(headerRow); table.appendChild(thead);
   const tbody = document.createElement("tbody");
   for (const item of items) {
     const tr = document.createElement("tr");
     const tdId = document.createElement("td"); tdId.textContent = item.id; tr.appendChild(tdId);
-    const tdTitle = document.createElement("td"); const titleSpan = document.createElement("span"); titleSpan.className = "resource-title"; titleSpan.textContent = item.title ?? "(без назви)"; titleSpan.addEventListener("click", () => onSelect(item.id)); tdTitle.appendChild(titleSpan); tr.appendChild(tdTitle);
+    const tdTitle = document.createElement("td"); const titleSpan = document.createElement("span"); titleSpan.className = "resource-title"; titleSpan.textContent = item.title ?? "(пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)"; titleSpan.addEventListener("click", () => onSelect(item.id)); tdTitle.appendChild(titleSpan); tr.appendChild(tdTitle);
     const tdCat = document.createElement("td"); const badge = document.createElement("span"); badge.className = "badge"; badge.textContent = item.category ?? "-"; tdCat.appendChild(badge); tr.appendChild(tdCat);
     const tdAuthor = document.createElement("td"); tdAuthor.textContent = item.authorName ?? item.authorId ?? "-"; tr.appendChild(tdAuthor);
-    const tdUrl = document.createElement("td"); const link = document.createElement("a"); link.href = item.url; link.target = "_blank"; link.rel = "noopener"; link.textContent = "посилання"; tdUrl.appendChild(link); tr.appendChild(tdUrl);
-    const tdActions = document.createElement("td"); const deleteBtn = document.createElement("button"); deleteBtn.className = "btn btn-sm btn-danger"; deleteBtn.textContent = "Видалити"; deleteBtn.addEventListener("click", () => onDelete(item.id)); tdActions.appendChild(deleteBtn); tr.appendChild(tdActions);
+    const tdUrl = document.createElement("td"); const link = document.createElement("a"); link.href = item.url; link.target = "_blank"; link.rel = "noopener"; link.textContent = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ"; tdUrl.appendChild(link); tr.appendChild(tdUrl);
+    const tdActions = document.createElement("td"); const deleteBtn = document.createElement("button"); deleteBtn.className = "btn btn-sm btn-danger"; deleteBtn.textContent = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ"; deleteBtn.addEventListener("click", () => onDelete(item.id)); tdActions.appendChild(deleteBtn); tr.appendChild(tdActions);
     tbody.appendChild(tr);
   }
   table.appendChild(tbody); el.appendChild(table);
@@ -39,11 +39,12 @@ export function renderDetail(resource) {
   const el = document.getElementById("detailPanel");
   if (!resource) { el.innerHTML = ""; el.style.display = "none"; return; }
   el.style.display = "block"; el.innerHTML = "";
-  const h3 = document.createElement("h3"); h3.textContent = `Деталі ресурсу #${resource.id}`; el.appendChild(h3);
-  [["Назва",resource.title],["Категорія",resource.category],["Опис",resource.description],["Автор",resource.authorName??resource.authorId],["Створено",new Date(resource.createdAt).toLocaleString("uk-UA")]].forEach(([label,value]) => { const p = document.createElement("p"); const b = document.createElement("b"); b.textContent = label+": "; p.appendChild(b); p.appendChild(document.createTextNode(value??"–")); el.appendChild(p); });
+  const h3 = document.createElement("h3"); h3.textContent = `пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ #${resource.id}`; el.appendChild(h3);
+  [["пїЅпїЅпїЅпїЅпїЅ",resource.title],["пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ",resource.category],["пїЅпїЅпїЅпїЅ",resource.description],["пїЅпїЅпїЅпїЅпїЅ",resource.authorName??resource.authorId],["пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ",new Date(resource.createdAt).toLocaleString("uk-UA")]].forEach(([label,value]) => { const p = document.createElement("p"); const b = document.createElement("b"); b.textContent = label+": "; p.appendChild(b); p.appendChild(document.createTextNode(value??"пїЅ")); el.appendChild(p); });
   const pUrl = document.createElement("p"); const bUrl = document.createElement("b"); bUrl.textContent = "URL: "; const a = document.createElement("a"); a.href = resource.url; a.target = "_blank"; a.textContent = resource.url; pUrl.appendChild(bUrl); pUrl.appendChild(a); el.appendChild(pUrl);
-  const closeBtn = document.createElement("button"); closeBtn.className = "btn btn-sm"; closeBtn.textContent = "Закрити"; closeBtn.addEventListener("click", () => { el.innerHTML = ""; el.style.display = "none"; }); el.appendChild(closeBtn);
+  const closeBtn = document.createElement("button"); closeBtn.className = "btn btn-sm"; closeBtn.textContent = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅ"; closeBtn.addEventListener("click", () => { el.innerHTML = ""; el.style.display = "none"; }); el.appendChild(closeBtn);
 }
-export function setFormEnabled(enabled) { const btn = document.getElementById("submitBtn"); btn.disabled = !enabled; btn.textContent = enabled ? "+ Додати ресурс" : "Збереження..."; }
+export function setFormEnabled(enabled) { const btn = document.getElementById("submitBtn"); btn.disabled = !enabled; btn.textContent = enabled ? "+ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ" : "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ..."; }
 export function clearForm() { document.getElementById("resourceForm").reset(); document.querySelectorAll(".field-error").forEach(el => el.textContent = ""); document.querySelectorAll("input, select, textarea").forEach(el => el.classList.remove("invalid")); }
 export function showFieldErrors(errors) { if (!errors) return; for (const [field, msg] of Object.entries(errors)) { const errEl = document.getElementById(`err-${field}`); const inputEl = document.getElementById(`f-${field}`); if (errEl) errEl.textContent = Array.isArray(msg) ? msg[0] : msg; if (inputEl) inputEl.classList.add("invalid"); } }
+
