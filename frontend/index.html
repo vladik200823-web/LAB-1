@@ -1,96 +1,116 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="uk">
-<head><meta charset="UTF-8">
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Каталог навчальних ресурсів</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
+  <header class="header">
     <h1>📚 Каталог навчальних ресурсів</h1>
-    <p class="subtitle">Варіант 5 — Лабораторна робота №4</p>
+    <p class="subtitle">Варіант 5 — Resources, Ratings, Comments, Users</p>
   </header>
 
-  <div id="notice" class="notice" style="display:none"></div>
-
   <main class="layout">
-    <!-- ── FORM ── -->
-    <aside class="sidebar">
-      <h2>Додати ресурс</h2>
-      <form id="resourceForm" novalidate>
+    <!-- ФОРМА -->
+    <section class="form-panel">
+      <h2 id="form-title">Додати ресурс</h2>
+
+      <form id="resource-form" novalidate>
+        <input type="hidden" id="edit-id" value="" />
 
         <div class="field">
-          <label for="f-title">Назва *</label>
-          <input id="f-title" type="text" placeholder="Наприклад: CS50" />
-          <span class="field-error" id="err-title"></span>
+          <label for="title">Назва *</label>
+          <input type="text" id="title" placeholder="Наприклад: CS50 by Harvard" />
+          <span class="error-msg" id="err-title"></span>
         </div>
 
         <div class="field">
-          <label for="f-url">URL *</label>
-          <input id="f-url" type="url" placeholder="https://..." />
-          <span class="field-error" id="err-url"></span>
+          <label for="url">URL *</label>
+          <input type="url" id="url" placeholder="https://..." />
+          <span class="error-msg" id="err-url"></span>
         </div>
 
         <div class="field">
-          <label for="f-category">Категорія *</label>
-          <select id="f-category">
-            <option value="">— Оберіть —</option>
-            <option value="programming">Programming</option>
-            <option value="math">Math</option>
-            <option value="design">Design</option>
-            <option value="languages">Languages</option>
-            <option value="science">Science</option>
-            <option value="business">Business</option>
-            <option value="other">Other</option>
+          <label for="category">Категорія *</label>
+          <select id="category">
+            <option value="">— обрати —</option>
+            <option value="programming">Програмування</option>
+            <option value="math">Математика</option>
+            <option value="design">Дизайн</option>
+            <option value="languages">Мови</option>
+            <option value="science">Наука</option>
+            <option value="business">Бізнес</option>
+            <option value="other">Інше</option>
           </select>
-          <span class="field-error" id="err-category"></span>
+          <span class="error-msg" id="err-category"></span>
         </div>
 
         <div class="field">
-          <label for="f-description">Опис *</label>
-          <textarea id="f-description" rows="3" placeholder="Короткий опис ресурсу"></textarea>
-          <span class="field-error" id="err-description"></span>
+          <label for="rating">Рейтинг (1–5) *</label>
+          <input type="number" id="rating" min="1" max="5" placeholder="від 1 до 5" />
+          <span class="error-msg" id="err-rating"></span>
         </div>
 
         <div class="field">
-          <label for="f-authorId">Автор *</label>
-          <select id="f-authorId">
-            <option value="">— Завантаження... —</option>
-          </select>
-          <span class="field-error" id="err-authorId"></span>
+          <label for="comment">Коментар</label>
+          <textarea id="comment" placeholder="Ваш відгук про ресурс..." rows="3"></textarea>
+          <span class="error-msg" id="err-comment"></span>
         </div>
 
-        <button type="submit" id="submitBtn" class="btn btn-primary">➕ Додати ресурс</button>
+        <div class="form-actions">
+          <button type="submit" id="submit-btn">➕ Додати</button>
+          <button type="button" id="cancel-btn" class="hidden">✖ Скасувати</button>
+        </div>
       </form>
-    </aside>
+    </section>
 
-    <!-- ── LIST ── -->
-    <section class="content">
-      <div class="list-header">
-        <h2>Список ресурсів</h2>
-        <div class="filter-row">
-          <label for="filterCategory">Фільтр:</label>
-          <select id="filterCategory">
-            <option value="">Всі категорії</option>
-            <option value="programming">Programming</option>
-            <option value="math">Math</option>
-            <option value="design">Design</option>
-            <option value="languages">Languages</option>
-            <option value="science">Science</option>
-            <option value="business">Business</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
+    <!-- СПИСОК -->
+    <section class="list-panel">
+      <div class="controls">
+        <input type="text" id="search" placeholder="🔍 Пошук за назвою..." />
+        <select id="filter-category">
+          <option value="">Усі категорії</option>
+          <option value="programming">Програмування</option>
+          <option value="math">Математика</option>
+          <option value="design">Дизайн</option>
+          <option value="languages">Мови</option>
+          <option value="science">Наука</option>
+          <option value="business">Бізнес</option>
+          <option value="other">Інше</option>
+        </select>
+        <select id="sort-by">
+          <option value="date-desc">Дата ↓</option>
+          <option value="date-asc">Дата ↑</option>
+          <option value="rating-desc">Рейтинг ↓</option>
+          <option value="rating-asc">Рейтинг ↑</option>
+          <option value="title-asc">Назва A→Я</option>
+        </select>
       </div>
 
-      <div id="listStatus"></div>
-      <div id="listContainer"></div>
-      <div id="detailPanel" class="detail-panel" style="display:none"></div>
+      <p class="list-meta" id="list-meta"></p>
+
+      <div class="table-wrapper">
+        <table id="resources-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Назва</th>
+              <th>Категорія</th>
+              <th>Рейтинг</th>
+              <th>Коментар</th>
+              <th>Дата</th>
+              <th>Дії</th>
+            </tr>
+          </thead>
+          <tbody id="resources-tbody"></tbody>
+        </table>
+        <p class="empty-state hidden" id="empty-state">Нічого не знайдено. Додайте перший ресурс!</p>
+      </div>
     </section>
   </main>
 
-  <script type="module" src="src/main.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
-

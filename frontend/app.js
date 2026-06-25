@@ -1,271 +1,243 @@
-/* ============================================================
-   Каталог навчальних ресурсів — Варіант 5
-   Структура: state | render | validate | handlers
-   ============================================================ */
+'use strict';
 
-// ===== STATE =====
-const state = {
-  items: [],          // масив ресурсів
-  nextId: 1,          // лічильник id
-  filters: {
-    search: '',
-    category: ''
-  },
-  currentRating: 0    // обране значення зірок у формі
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'resources_v1';
+
+let state = {
+  resources: [],
+  filters: { search: '', category: '', sort: 'date-desc' },
+  editingId: null,
 };
 
-// ===== CATEGORY BADGE CLASS =====
-const categoryClass = {
-  'Програмування': 'cat-programming',
-  'Математика':    'cat-math',
-  'Дизайн':        'cat-design',
-  'Мови':          'cat-languages',
-  'Наука':         'cat-science',
-  'Бізнес':        'cat-business',
-  'Інше':          'cat-other'
+// ─── PERSISTENCE ──────────────────────────────────────────────────────────────
+function saveToStorage() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.resources));
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    state.resources = raw ? JSON.parse(raw) : [];
+  } catch {
+    state.resources = [];
+  }
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+let nextId = 1;
+function generateId() {
+  const max = state.resources.reduce((m, r) => Math.max(m, r.id), 0);
+  nextId = max + 1;
+  return nextId;
+}
+
+function starsHtml(n) {
+  return '★'.repeat(Number(n)) + '☆'.repeat(5 - Number(n));
+}
+
+const CATEGORY_LABELS = {
+  programming: 'Програмування',
+  math: 'Математика',
+  design: 'Дизайн',
+  languages: 'Мови',
+  science: 'Наука',
+  business: 'Бізнес',
+  other: 'Інше',
 };
 
-// ===== DOM REFS =====
-const form          = document.getElementById('resourceForm');
-const titleInput    = document.getElementById('title');
-const urlInput      = document.getElementById('url');
-const categoryInput = document.getElementById('category');
-const ratingInput   = document.getElementById('rating');
-const commentInput  = document.getElementById('comment');
-const starPicker    = document.getElementById('starPicker');
-const stars         = starPicker.querySelectorAll('.star');
-const submitBtn     = document.getElementById('submitBtn');
-const resetBtn      = document.getElementById('resetBtn');
-const successMsg    = document.getElementById('formSuccess');
-const tbody         = document.getElementById('resourceBody');
-const emptyRow      = document.getElementById('emptyRow');
-const searchInput   = document.getElementById('searchInput');
-const filterCategory= document.getElementById('filterCategory');
-const totalCount    = document.getElementById('totalCount');
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
 
-// ===== READ FORM =====
+// ─── READ FORM ────────────────────────────────────────────────────────────────
 function readForm() {
   return {
-    title:    titleInput.value.trim(),
-    url:      urlInput.value.trim(),
-    category: categoryInput.value,
-    rating:   state.currentRating,
-    comment:  commentInput.value.trim()
+    title: document.getElementById('title').value.trim(),
+    url: document.getElementById('url').value.trim(),
+    category: document.getElementById('category').value,
+    rating: document.getElementById('rating').value,
+    comment: document.getElementById('comment').value.trim(),
   };
 }
 
-// ===== VALIDATE =====
+// ─── VALIDATE ─────────────────────────────────────────────────────────────────
 function validate(data) {
   const errors = {};
 
   if (!data.title) {
-    errors.title = 'Назва є обов\'язковою';
+    errors.title = 'Назва є обов'язковою';
   } else if (data.title.length < 2) {
-    errors.title = 'Назва занадто коротка (мін. 2 символи)';
+    errors.title = 'Назва має бути не менше 2 символів';
   }
 
   if (!data.url) {
-    errors.url = 'URL є обов\'язковим';
-  } else if (!isValidUrl(data.url)) {
-    errors.url = 'Введіть коректний URL (наприклад: https://example.com)';
+    errors.url = 'URL є обов'язковим';
+  } else {
+    try { new URL(data.url); }
+    catch { errors.url = 'Введіть коректний URL (https://...)'; }
   }
 
   if (!data.category) {
     errors.category = 'Оберіть категорію';
   }
 
-  if (!data.rating || data.rating < 1 || data.rating > 5) {
-    errors.rating = 'Оберіть рейтинг від 1 до 5';
+  const r = Number(data.rating);
+  if (!data.rating) {
+    errors.rating = 'Рейтинг є обов'язковим';
+  } else if (!Number.isInteger(r) || r < 1 || r > 5) {
+    errors.rating = 'Рейтинг має бути цілим числом від 1 до 5';
   }
 
   return errors;
 }
 
-function isValidUrl(str) {
-  try {
-    const url = new URL(str);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
-
-// ===== SHOW / CLEAR ERRORS =====
+// ─── SHOW / CLEAR ERRORS ─────────────────────────────────────────────────────
 function showErrors(errors) {
-  const fields = ['title', 'url', 'category', 'rating'];
-
-  fields.forEach(field => {
-    const el = document.getElementById(field === 'rating' ? 'starPicker' : field);
-    const errEl = document.getElementById(field + 'Error');
-    const inputEl = document.getElementById(field);
-
-    if (errors[field]) {
-      if (errEl) errEl.textContent = errors[field];
-      if (inputEl && field !== 'rating') inputEl.classList.add('invalid');
-      if (field === 'rating') el.classList.add('invalid');
+  const fields = ['title', 'url', 'category', 'rating', 'comment'];
+  fields.forEach(f => {
+    const el = document.getElementById(f);
+    const errEl = document.getElementById(`err-${f}`);
+    if (errors[f]) {
+      el.classList.add('invalid');
+      errEl.textContent = errors[f];
     } else {
-      if (errEl) errEl.textContent = '';
-      if (inputEl && field !== 'rating') inputEl.classList.remove('invalid');
-      if (field === 'rating') el.classList.remove('invalid');
+      el.classList.remove('invalid');
+      errEl.textContent = '';
     }
   });
 }
 
 function clearErrors() {
-  ['title', 'url', 'category', 'rating'].forEach(field => {
-    const errEl = document.getElementById(field + 'Error');
-    const inputEl = document.getElementById(field);
-    if (errEl) errEl.textContent = '';
-    if (inputEl) inputEl.classList.remove('invalid');
-  });
-  starPicker.classList.remove('invalid');
+  showErrors({});
 }
 
-// ===== ADD ITEM =====
+// ─── ADD ITEM ─────────────────────────────────────────────────────────────────
 function addItem(data) {
   const item = {
-    id:       state.nextId++,
-    title:    data.title,
-    url:      data.url,
+    id: generateId(),
+    title: data.title,
+    url: data.url,
     category: data.category,
-    rating:   data.rating,
-    comment:  data.comment
+    rating: Number(data.rating),
+    comment: data.comment,
+    createdAt: new Date().toISOString(),
   };
-  state.items.push(item);
+  state.resources.push(item);
+  saveToStorage();
   return item;
 }
 
-// ===== DELETE ITEM =====
-function deleteItem(id) {
-  state.items = state.items.filter(item => item.id !== id);
-  render();
+// ─── UPDATE ITEM ──────────────────────────────────────────────────────────────
+function updateItem(id, data) {
+  const idx = state.resources.findIndex(r => r.id === id);
+  if (idx === -1) return;
+  state.resources[idx] = {
+    ...state.resources[idx],
+    title: data.title,
+    url: data.url,
+    category: data.category,
+    rating: Number(data.rating),
+    comment: data.comment,
+  };
+  saveToStorage();
 }
 
-// ===== RENDER =====
+// ─── DELETE ITEM ──────────────────────────────────────────────────────────────
+function deleteItem(id) {
+  state.resources = state.resources.filter(r => r.id !== id);
+  saveToStorage();
+}
+
+// ─── FILTER + SORT ────────────────────────────────────────────────────────────
+function getFiltered() {
+  const { search, category, sort } = state.filters;
+  let list = [...state.resources];
+
+  if (search) {
+    const q = search.toLowerCase();
+    list = list.filter(r => r.title.toLowerCase().includes(q));
+  }
+
+  if (category) {
+    list = list.filter(r => r.category === category);
+  }
+
+  if (sort === 'date-desc') list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  else if (sort === 'date-asc') list.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  else if (sort === 'rating-desc') list.sort((a, b) => b.rating - a.rating);
+  else if (sort === 'rating-asc') list.sort((a, b) => a.rating - b.rating);
+  else if (sort === 'title-asc') list.sort((a, b) => a.title.localeCompare(b.title, 'uk'));
+
+  return list;
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
 function render() {
-  const { search, category } = state.filters;
+  const list = getFiltered();
+  const tbody = document.getElementById('resources-tbody');
+  const empty = document.getElementById('empty-state');
+  const meta = document.getElementById('list-meta');
 
-  const filtered = state.items.filter(item => {
-    const matchSearch = !search ||
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      item.comment.toLowerCase().includes(search.toLowerCase());
-    const matchCategory = !category || item.category === category;
-    return matchSearch && matchCategory;
-  });
+  meta.textContent = `Знайдено: ${list.length} із ${state.resources.length}`;
 
-  // Update header count
-  const total = state.items.length;
-  totalCount.textContent = total === 0
-    ? '0 ресурсів'
-    : total === 1
-    ? '1 ресурс'
-    : `${total} ресурсів`;
-
-  // Clear tbody (keep emptyRow)
-  while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-
-  if (filtered.length === 0) {
-    const tr = document.createElement('tr');
-    tr.className = 'empty-row';
-    tr.innerHTML = `<td colspan="7">
-      <div class="empty-state">
-        <span class="empty-icon">◈</span>
-        <p>${state.items.length === 0 ? 'Додайте перший ресурс' : 'Нічого не знайдено'}</p>
-      </div>
-    </td>`;
-    tbody.appendChild(tr);
+  if (list.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
     return;
   }
 
-  filtered.forEach((item, index) => {
-    const tr = document.createElement('tr');
-    tr.dataset.id = item.id;
+  empty.classList.add('hidden');
 
-    const catClass = categoryClass[item.category] || 'cat-other';
-    const filledStars = '★'.repeat(item.rating);
-    const emptyStars  = '★'.repeat(5 - item.rating);
-    const shortUrl = item.url.replace(/^https?:\/\//, '').replace(/\/$/, '').substring(0, 30);
-
-    tr.innerHTML = `
-      <td class="cell-num">${index + 1}</td>
-      <td class="cell-title">${escapeHtml(item.title)}</td>
-      <td class="cell-url">
-        <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" title="${escapeHtml(item.url)}">
-          ${escapeHtml(shortUrl)}${item.url.length > 33 ? '…' : ''}
-        </a>
-      </td>
-      <td><span class="category-badge ${catClass}">${escapeHtml(item.category)}</span></td>
+  // Делегування подій — рендеримо tbody один раз
+  tbody.innerHTML = list.map(r => `
+    <tr data-id="${r.id}">
+      <td class="td-id">${r.id}</td>
+      <td class="td-title"><a href="${r.url}" target="_blank" rel="noopener">${r.title}</a></td>
+      <td><span class="badge badge-${r.category}">${CATEGORY_LABELS[r.category] || r.category}</span></td>
+      <td><span class="stars">${starsHtml(r.rating)}</span></td>
+      <td class="td-comment">${r.comment || '—'}</td>
+      <td class="td-date">${formatDate(r.createdAt)}</td>
       <td>
-        <span class="stars-display">${filledStars}</span><span class="stars-empty">${emptyStars}</span>
+        <div class="actions">
+          <button class="btn-edit" data-action="edit" data-id="${r.id}">✏️ Ред.</button>
+          <button class="btn-delete" data-action="delete" data-id="${r.id}">🗑 Видалити</button>
+        </div>
       </td>
-      <td class="cell-comment" title="${escapeHtml(item.comment)}">
-        ${item.comment ? escapeHtml(item.comment) : '<span style="color: var(--text-muted); font-style: italic;">—</span>'}
-      </td>
-      <td>
-        <button type="button" class="btn-delete" data-id="${item.id}">Видалити</button>
-      </td>
-    `;
-
-    tbody.appendChild(tr);
-  });
+    </tr>
+  `).join('');
 }
 
-// ===== HELPERS =====
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
+// ─── FORM RESET ───────────────────────────────────────────────────────────────
 function resetForm() {
-  form.reset();
-  state.currentRating = 0;
-  ratingInput.value = '';
-  stars.forEach(s => s.classList.remove('active'));
+  document.getElementById('resource-form').reset();
+  document.getElementById('edit-id').value = '';
+  document.getElementById('form-title').textContent = 'Додати ресурс';
+  document.getElementById('submit-btn').textContent = '➕ Додати';
+  document.getElementById('cancel-btn').classList.add('hidden');
+  state.editingId = null;
   clearErrors();
-  successMsg.hidden = true;
 }
 
-// ===== STAR PICKER LOGIC =====
-function setStars(value) {
-  state.currentRating = value;
-  ratingInput.value = value;
-  stars.forEach(s => {
-    s.classList.toggle('active', parseInt(s.dataset.value) <= value);
-  });
+// ─── POPULATE FORM FOR EDIT ───────────────────────────────────────────────────
+function populateForm(item) {
+  document.getElementById('title').value = item.title;
+  document.getElementById('url').value = item.url;
+  document.getElementById('category').value = item.category;
+  document.getElementById('rating').value = item.rating;
+  document.getElementById('comment').value = item.comment;
+  document.getElementById('edit-id').value = item.id;
+  document.getElementById('form-title').textContent = 'Редагувати ресурс';
+  document.getElementById('submit-btn').textContent = '💾 Зберегти';
+  document.getElementById('cancel-btn').classList.remove('hidden');
+  state.editingId = item.id;
+  clearErrors();
+  document.getElementById('title').focus();
+  document.querySelector('.form-panel').scrollIntoView({ behavior: 'smooth' });
 }
 
-stars.forEach(star => {
-  star.addEventListener('click', () => {
-    const val = parseInt(star.dataset.value);
-    setStars(val);
-    // Clear rating error if user picks a star
-    document.getElementById('ratingError').textContent = '';
-    starPicker.classList.remove('invalid');
-  });
-
-  star.addEventListener('mouseenter', () => {
-    const val = parseInt(star.dataset.value);
-    stars.forEach(s => {
-      s.classList.toggle('active', parseInt(s.dataset.value) <= val);
-    });
-  });
-});
-
-starPicker.addEventListener('mouseleave', () => {
-  setStars(state.currentRating);
-});
-
-// ===== HANDLERS =====
-
-// Submit
-form.addEventListener('submit', e => {
+// ─── HANDLERS ─────────────────────────────────────────────────────────────────
+function handleFormSubmit(e) {
   e.preventDefault();
-  successMsg.hidden = true;
-
   const data = readForm();
   const errors = validate(data);
 
@@ -275,76 +247,75 @@ form.addEventListener('submit', e => {
   }
 
   clearErrors();
-  addItem(data);
+
+  if (state.editingId !== null) {
+    updateItem(state.editingId, data);
+  } else {
+    addItem(data);
+  }
+
+  resetForm();
   render();
+}
 
-  // Show success then clear
-  successMsg.hidden = false;
-  resetForm();
-  successMsg.hidden = false; // re-show after reset
-
-  setTimeout(() => {
-    successMsg.hidden = true;
-  }, 2500);
-});
-
-// Reset
-resetBtn.addEventListener('click', () => {
-  resetForm();
-});
-
-// Delete (event delegation)
-tbody.addEventListener('click', e => {
-  const btn = e.target.closest('.btn-delete');
+// Делегування подій для кнопок таблиці
+function handleTableClick(e) {
+  const btn = e.target.closest('[data-action]');
   if (!btn) return;
-  const id = parseInt(btn.dataset.id);
-  if (confirm('Видалити цей ресурс?')) {
-    deleteItem(id);
-  }
-});
 
-// Search
-searchInput.addEventListener('input', () => {
-  state.filters.search = searchInput.value.trim();
+  const id = Number(btn.dataset.id);
+  const action = btn.dataset.action;
+
+  if (action === 'delete') {
+    if (confirm('Видалити цей ресурс?')) {
+      deleteItem(id);
+      if (state.editingId === id) resetForm();
+      render();
+    }
+  }
+
+  if (action === 'edit') {
+    const item = state.resources.find(r => r.id === id);
+    if (item) populateForm(item);
+  }
+}
+
+function handleSearchInput(e) {
+  state.filters.search = e.target.value.trim();
   render();
-});
+}
 
-// Filter by category
-filterCategory.addEventListener('change', () => {
-  state.filters.category = filterCategory.value;
+function handleFilterCategory(e) {
+  state.filters.category = e.target.value;
   render();
-});
+}
 
-// Inline validation on blur
-titleInput.addEventListener('blur', () => {
-  const val = titleInput.value.trim();
-  const errEl = document.getElementById('titleError');
-  if (!val) {
-    titleInput.classList.add('invalid');
-    errEl.textContent = 'Назва є обов\'язковою';
-  } else if (val.length < 2) {
-    titleInput.classList.add('invalid');
-    errEl.textContent = 'Назва занадто коротка (мін. 2 символи)';
-  } else {
-    titleInput.classList.remove('invalid');
-    errEl.textContent = '';
-  }
-});
+function handleSortChange(e) {
+  state.filters.sort = e.target.value;
+  render();
+}
 
-urlInput.addEventListener('blur', () => {
-  const val = urlInput.value.trim();
-  const errEl = document.getElementById('urlError');
-  if (!val) {
-    urlInput.classList.add('invalid');
-    errEl.textContent = 'URL є обов\'язковим';
-  } else if (!isValidUrl(val)) {
-    urlInput.classList.add('invalid');
-    errEl.textContent = 'Введіть коректний URL (наприклад: https://example.com)';
-  } else {
-    urlInput.classList.remove('invalid');
-    errEl.textContent = '';
-  }
-});
+function handleCancel() {
+  resetForm();
+}
 
-// ===== INIT =====
-render();
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  loadFromStorage();
+
+  // Form
+  document.getElementById('resource-form').addEventListener('submit', handleFormSubmit);
+  document.getElementById('cancel-btn').addEventListener('click', handleCancel);
+
+  // Table — делегування подій
+  document.getElementById('resources-tbody').addEventListener('click', handleTableClick);
+
+  // Filters
+  document.getElementById('search').addEventListener('input', handleSearchInput);
+  document.getElementById('filter-category').addEventListener('change', handleFilterCategory);
+  document.getElementById('sort-by').addEventListener('change', handleSortChange);
+
+  render();
+}
+
+document.addEventListener('DOMContentLoaded', init);
